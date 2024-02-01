@@ -35,7 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Fiddler">
-      <HintPath>..\..\..\..\..\..\Users\studioat\AppData\Local\Programs\Fiddler\Fiddler.exe</HintPath>
+      <HintPath>..\..\..\AppData\Local\Programs\Fiddler\Fiddler.exe</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -93,8 +93,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy *.dll "%25USERPROFILE%25\Documents\Fiddler2\Scripts"
-copy *.pdb "%25USERPROFILE%25\Documents\Fiddler2\Scripts"</PostBuildEvent>
+    <PostBuildEvent>copy *.dll "%25LOCALAPPDATA%25\Programs\Fiddler\Scripts"
+copy *.pdb "%25LOCALAPPDATA%25\Programs\Fiddler\Scripts"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>

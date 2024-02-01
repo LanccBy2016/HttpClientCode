@@ -15,6 +15,7 @@ namespace HttpClientCode
         private MenuItem __menuItem;
         private MenuItem __menuItemGenerate;
         private MenuItem __menuItemNoHeader;
+        private MenuItem __menuItemEncodeParameter;
         private Session __selectedSession;
         private FrmGenerateHttpClientCode __frm;
         private string MESSAGEBOXTEXT = "HttpClientCode";
@@ -29,12 +30,16 @@ namespace HttpClientCode
             this.__menuItem = new MenuItem("Http Client Code");
             this.__menuItemGenerate = new MenuItem("Generate code");
             this.__menuItemNoHeader = new MenuItem("Add headers");
-            this.__menuItemNoHeader.Checked = false;
+            this.__menuItemNoHeader.Checked = true;
+            this.__menuItemEncodeParameter = new MenuItem("Encode Parameter");
+            this.__menuItemEncodeParameter.Checked = false;
             this.__menuItem.MenuItems.Add(this.__menuItemGenerate);
             this.__menuItem.MenuItems.Add(this.__menuItemNoHeader);
+            this.__menuItem.MenuItems.Add(this.__menuItemEncodeParameter);
             FiddlerApplication.UI.lvSessions.ContextMenu.MenuItems.Add(this.__menuItem);
             this.__menuItemGenerate.Click += new EventHandler(__menuItemGenerate_Click);
             this.__menuItemNoHeader.Click += new EventHandler(__menuItemNoHeader_Click);
+            this.__menuItemEncodeParameter.Click += new EventHandler(__menuItemEncodeParameter_Click);
         }
 
         string CanHandle()
@@ -51,6 +56,11 @@ namespace HttpClientCode
         }
 
         void __menuItemNoHeader_Click(object sender, EventArgs e)
+        {
+            ((MenuItem)sender).Checked = !((MenuItem)sender).Checked;
+        }
+
+        void __menuItemEncodeParameter_Click(object sender, EventArgs e)
         {
             ((MenuItem)sender).Checked = !((MenuItem)sender).Checked;
         }
@@ -92,7 +102,7 @@ namespace HttpClientCode
             
             template.Session.Add("uri", (this.__selectedSession.isHTTPS ? "https" : "http") + "://" + this.__selectedSession.host + this.__selectedSession.PathAndQuery);
             //template.Session.Add("host", this.__selectedSession.host);
-            template.Session.Add("httpmethod", this.__selectedSession.RequestMethod);
+            template.Session.Add("httpmethod",  this.__selectedSession.RequestMethod);
             
             
 
@@ -139,7 +149,14 @@ namespace HttpClientCode
                             continue;
                         }
 
-                        bodies.Add(item, x[item]);
+                        if (this.__menuItemEncodeParameter.Checked)
+                        {
+                            bodies.Add(item, System.Web.HttpUtility.UrlEncode(x[item]));
+                        }
+                        else
+                        {
+                            bodies.Add(item, x[item]);
+                        }
                     }
                     
 
@@ -155,6 +172,7 @@ namespace HttpClientCode
 
             template.Session.Add("bodies", bodies);
 
+            template.Session.Add("encodeparam", this.__menuItemEncodeParameter.Checked);
 
             template.Initialize();
             var generatedCode = template.TransformText();

@@ -4,50 +4,76 @@
 <#@ parameter type="System.String" name="httpmethod"  #>
 <#@ parameter type="System.Collections.Generic.Dictionary<string,string>" name="headers" #>
 <#@ parameter type="System.Collections.Generic.Dictionary<string,string>" name="bodies" #>
-var uriBuilder = new UriBuilder("<# Write(uri); #>");
-var httpClient = new HttpClient();
-<#
-if(httpmethod.ToUpper()=="GET")
+<#@ parameter type="System.Boolean" name="encodeparam" #>
+using (var httpClient = new HttpClient())
 {
-#>
-var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, uriBuilder.ToString());
-<# 
-} 
-#>
-<#
-if(httpmethod.ToUpper()=="POST")
-{
-#>
-var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uriBuilder.ToString());
-<# 
-} 
-#>
-<#
-foreach (var item in headers)
-{
-#>
-httpRequestMessage.Headers.Add("<# Write(item.Key.ToString()); #>","<# Write(item.Value.ToString()); #>");
-<#
+	var uriBuilder = new UriBuilder("<# Write(uri); #>");
+	<#
+	if(httpmethod.ToUpper()=="GET")
+	{
+	#>
+	var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, uriBuilder.ToString());
+	<# 
+	} 
+	#>
+	<#
+	if(httpmethod.ToUpper()=="POST")
+	{
+	#>
+	var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uriBuilder.ToString());
+	<# 
+	} 
+	#>
+	<#
+	foreach (var item in headers)
+	{
+		if(item.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+		{
+	#>
+	httpRequestMessage.Content=new StringContent("<# Write(item.Value.ToString()); #>");
+	<#
+		}
+		else if(item.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase))
+		{
+			continue;
+		}
+		else
+		{
+	#>
+	httpRequestMessage.Headers.Add("<# Write(item.Key.ToString()); #>","<# Write(item.Value.ToString()); #>");
+	<#
+		}
+	}
+	#>
+	<#
+	if(bodies.Count > 0)
+	{
+	#>
+	var values = new Dictionary<string, string>();
+	<#
+	foreach (var item in bodies)
+	{
+		if(encodeparam)
+		{
+	#>
+	values.Add("<# Write(item.Key.ToString()); #>",System.Web.HttpUtility.UrlDecode("<# Write(item.Value.ToString()); #>"));
+	<#
+		}
+		else
+		{
+	#>
+	values.Add("<# Write(item.Key.ToString()); #>","<# Write(item.Value.ToString()); #>");
+	<#
+		}
+	}
+	#>
+	var content = new FormUrlEncodedContent(values);
+	httpRequestMessage.Content = content;
+	<# 
+	}	
+	#>
+	var httpResponseMessage = await httpClient.SendAsync(httpRequestMessage);
+    var httpContent = httpResponseMessage.Content;
+    string result = await httpResponseMessage.Content.ReadAsStringAsync();
+	//Console.WriteLine(result);
 }
-#>
-<#
-if(bodies.Count > 0)
-{
-#>
-var values = new Dictionary<string, string>();
-<#
-foreach (var item in bodies)
-{
-#>
-values.Add("<# Write(item.Key.ToString()); #>","<# Write(item.Value.ToString()); #>");
-<#
-}
-#>
-var content = new FormUrlEncodedContent(values);
-httpRequestMessage.Content = content;
-<# 
-}	
-#>
-var httpResponseMessage = httpClient.SendAsync(httpRequestMessage).Result;
-var httpContent = httpResponseMessage.Content;
-string result = httpResponseMessage.Content.ReadAsStringAsync().Result;
