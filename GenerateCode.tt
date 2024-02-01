@@ -25,9 +25,18 @@ var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uriBuilder.ToSt
 <#
 foreach (var item in headers)
 {
-#>
-httpRequestMessage.Headers.Add("<# Write(item.Key.ToString()); #>","<# Write(item.Value.ToString()); #>");
-<#
+	if(item.Key.ToString().ToUpper()!="Content-Type".ToUpper())
+	{
+		#>
+		httpRequestMessage.Headers.Add("<# Write(item.Key.ToString()); #>","<# Write(item.Value.ToString()); #>");
+		<#
+	}
+	else
+	{
+		#>
+		httpRequestMessage.Content=new StringContent(string.Empty,Encoding.UTF8, "<# Write(item.Value.ToString()); #>");
+		<#
+	}
 }
 #>
 <#
